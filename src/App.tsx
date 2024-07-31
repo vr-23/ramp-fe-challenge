@@ -6,31 +6,27 @@ import { useEmployees } from "./hooks/useEmployees"
 import { usePaginatedTransactions } from "./hooks/usePaginatedTransactions"
 import { useTransactionsByEmployee } from "./hooks/useTransactionsByEmployee"
 import { EMPTY_EMPLOYEE } from "./utils/constants"
-import { Employee, Transaction } from "./utils/types"
+import { Employee } from "./utils/types"
 
 export function App() {
   const { data: employees, ...employeeUtils } = useEmployees()
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
-  const [transactions, setTransactions] = useState<Transaction[] | null>(null)
 
-  useEffect(() => {
-    if (paginatedTransactions?.data) {
-      setTransactions(paginatedTransactions.data)
-    } else if (transactionsByEmployee) {
-      setTransactions(transactionsByEmployee)
-    } else {
-      setTransactions(null)
-    }
-  }, [paginatedTransactions, transactionsByEmployee])
+  const transactions = useMemo(
+    () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
+    [paginatedTransactions, transactionsByEmployee]
+  )
 
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
     transactionsByEmployeeUtils.invalidateData()
-    await employeeUtils.fetchAll()
-    await paginatedTransactionsUtils.fetchAll()
     setIsLoading(false)
+    await employeeUtils.fetchAll()
+    await paginatedTransactionsUtils.fetchAll() 
+
+    
   }, [employeeUtils, paginatedTransactionsUtils, transactionsByEmployeeUtils])
 
   const loadTransactionsByEmployee = useCallback(
@@ -68,7 +64,8 @@ export function App() {
             if (newValue === null) {
               return
             }
-            newValue.id.length ? await loadTransactionsByEmployee(newValue.id) : await loadAllTransactions()
+            newValue.id.length ? await loadTransactionsByEmployee(newValue.id) :  await loadAllTransactions()
+            
           }}
         />
 
@@ -76,16 +73,19 @@ export function App() {
 
         <div className="RampGrid">
           <Transactions transactions={transactions} />
-          {transactions !== null && paginatedTransactions?.nextPage && (
+          {transactions !== null &&( paginatedTransactions?.nextPage &&(
             <button
-              className="RampButton"
-              disabled={paginatedTransactionsUtils.loading}
-              onClick={async () => {
-                await loadAllTransactions()
-              }}
-            >
-              View More
-            </button>
+            className="RampButton"
+            disabled={paginatedTransactionsUtils.loading}
+            onClick={async () => {
+              console.log('transactions',paginatedTransactionsUtils)
+              await loadAllTransactions()
+            }}
+          >
+            View More
+          </button>
+          )
+            
           )}
         </div>
       </main>

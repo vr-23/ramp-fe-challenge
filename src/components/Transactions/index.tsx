@@ -13,15 +13,8 @@ export const Transactions: TransactionsComponent = ({ transactions }) => {
         transactionId,
         value: newValue,
       })
-
-      // Update the transactions state to reflect the new value
-      if (transactions !== null) {
-        transactions = transactions.map(transaction =>
-          transaction.id === transactionId ? { ...transaction, approved: newValue } : transaction
-        )
-      }
     },
-    [fetchWithoutCache, transactions]
+    [fetchWithoutCache]
   )
 
   if (transactions === null) {
